@@ -870,54 +870,47 @@
     <div class="section-label">
       <div class="section-icon icon-sage">🏥</div>
       <div>
-        <h2>Nearby Pharmacies in Lisbon</h2>
-        <p>Including 24-hour options</p>
+        <h2 id="pharmacies-title">Nearby Pharmacies</h2>
+        <p id="pharmacies-subtitle">Locating pharmacies near you…</p>
       </div>
     </div>
-    <div id="map"></div>
-    <div class="pharmacy-list">
-      <a class="pharmacy-item" href="https://maps.google.com/?q=Pharmacy+Uruguai+Lisbon" target="_blank">
-        <div>
-          <div class="ph-name">Pharmacy Uruguai</div>
-          <div class="ph-addr">Av. do Uruguai 18A, 1500-613 Lisboa</div>
-          <div class="ph-hours open24">🟢 Open 24 hours · +351 21 711 1359</div>
-        </div>
-        <div class="ph-rating"><span class="ph-stars">★★★★</span><span>4.3</span></div>
-      </a>
-      <a class="pharmacy-item" href="https://maps.google.com/?q=Farmacia+Sao+Mamede+Lisbon" target="_blank">
-        <div>
-          <div class="ph-name">Farmácia São Mamede</div>
-          <div class="ph-addr">R. da Escola Politécnica 82, 1250-102 Lisboa</div>
-          <div class="ph-hours open24">🟢 Open 24 hours · +351 21 396 0280</div>
-        </div>
-        <div class="ph-rating"><span class="ph-stars">★★★½</span><span>3.6</span></div>
-      </a>
-      <a class="pharmacy-item" href="https://maps.google.com/?q=Farmacia+Estacio+Lisboa" target="_blank">
-        <div>
-          <div class="ph-name">Farmácia Estácio</div>
-          <div class="ph-addr">Praça dos Restauradores 16, 1250-187 Lisboa</div>
-          <div class="ph-hours hours">🕐 Mon–Thu 9 AM–9 PM, Fri–Sun 10 AM–8 PM · +351 21 150 5476</div>
-        </div>
-        <div class="ph-rating"><span class="ph-stars">★★★★</span><span>4.2</span></div>
-      </a>
-      <a class="pharmacy-item" href="https://maps.google.com/?q=Farmacia+Algarve+Lisboa" target="_blank">
-        <div>
-          <div class="ph-name">Farmácia Algarve</div>
-          <div class="ph-addr">Av. de Roma 7B, 1000-260 Lisboa</div>
-          <div class="ph-hours hours">🕐 Daily 9 AM–12 AM · +351 21 840 1478</div>
-        </div>
-        <div class="ph-rating"><span class="ph-stars">★★★½</span><span>3.9</span></div>
-      </a>
-      <a class="pharmacy-item" href="https://maps.google.com/?q=Barral+Pharmacy+Rua+Augusta+Lisbon" target="_blank">
-        <div>
-          <div class="ph-name">Barral (Rua Augusta)</div>
-          <div class="ph-addr">R. Augusta 225, 1100-051 Lisboa</div>
-          <div class="ph-hours hours">🕐 Mon–Fri 8 AM–9 PM, Sat–Sun 9 AM–9 PM · +351 21 347 6141</div>
-        </div>
-        <div class="ph-rating"><span class="ph-stars">★★★</span><span>3.4</span></div>
-      </a>
+
+    <!-- Location permission banner -->
+    <div id="location-banner" style="
+      display:flex; align-items:center; gap:14px;
+      background:var(--sage-faint); border:1px solid var(--sage-light);
+      border-radius:14px; padding:16px 20px; margin-bottom:20px; font-size:0.88rem; color:var(--sage);">
+      <span style="font-size:1.4rem;">📍</span>
+      <div>
+        <strong>Requesting your location…</strong><br>
+        <span style="font-weight:400; color:var(--text-mid);">Please allow location access so we can show pharmacies near you. No data is stored or shared.</span>
+      </div>
     </div>
-    <p style="margin-top:14px; font-size:0.78rem; color: var(--text-light);">💡 Find your nearest duty pharmacy at <a href="https://www.farmaciasportuguesas.pt" target="_blank" style="color:var(--sage);">farmaciasportuguesas.pt</a> — Portugal's official pharmacy locator.</p>
+
+    <div id="map"></div>
+
+    <!-- Loading state -->
+    <div id="pharmacy-loading" style="display:none; text-align:center; padding:32px 0; color:var(--text-light); font-size:0.9rem;">
+      <div style="font-size:2rem; margin-bottom:10px;">⏳</div>
+      Searching for pharmacies near you…
+    </div>
+
+    <!-- Error state -->
+    <div id="pharmacy-error" style="display:none; background:var(--amber-light); border:1px solid #e5c59a; border-radius:14px; padding:18px 22px; margin-top:16px; font-size:0.88rem; color:var(--amber);">
+      <strong>⚠️ Could not load pharmacies automatically.</strong><br>
+      <span id="pharmacy-error-msg" style="color:var(--text-mid);"></span>
+      <br><br>
+      <span style="color:var(--text-mid);">Find your nearest pharmacy manually at
+        <a href="https://www.farmaciasportuguesas.pt" target="_blank" style="color:var(--sage);">farmaciasportuguesas.pt</a>
+        (Portugal) or search Google Maps for "pharmacy near me".
+      </span>
+    </div>
+
+    <div id="pharmacy-list" class="pharmacy-list" style="margin-top:20px;"></div>
+
+    <p id="pharmacy-footer" style="display:none; margin-top:14px; font-size:0.78rem; color: var(--text-light);">
+      💡 Data from <a href="https://www.openstreetmap.org" target="_blank" style="color:var(--sage);">OpenStreetMap</a> contributors via Overpass API · Results within 2 km of your location
+    </p>
   </section>
 
   <!-- RESOURCES -->
@@ -997,7 +990,7 @@
 </footer>
 
 <script>
-  // Accordion
+  // ── Accordion ──
   function toggleAccordion(btn) {
     const item = btn.closest('.accordion-item');
     const isOpen = item.classList.contains('open');
@@ -1005,41 +998,192 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  // Simple Leaflet map (OpenStreetMap, no API key needed)
-  const mapScript = document.createElement('script');
-  mapScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-  document.head.appendChild(mapScript);
+  // ── Load Leaflet then kick off geolocation ──
   const mapStyle = document.createElement('link');
   mapStyle.rel = 'stylesheet';
   mapStyle.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
   document.head.appendChild(mapStyle);
 
-  mapScript.onload = function() {
-    const map = L.map('map').setView([38.727, -9.155], 13);
+  const mapScript = document.createElement('script');
+  mapScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+  document.head.appendChild(mapScript);
+
+  mapScript.onload = function () {
+
+    // Default fallback centre (Lisbon) — replaced if geolocation succeeds
+    const DEFAULT = [38.727, -9.155];
+    const map = L.map('map').setView(DEFAULT, 14);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    const icon = L.divIcon({
-      html: '<div style="background:#5a7a5e;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25)">💊</div>',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      className: ''
+    // ── Icons ──
+    const pharmacyIcon = L.divIcon({
+      html: '<div style="background:#5a7a5e;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.28)">💊</div>',
+      iconSize: [34, 34], iconAnchor: [17, 17], className: ''
+    });
+    const youIcon = L.divIcon({
+      html: '<div style="background:#c97d3a;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.32)"></div>',
+      iconSize: [18, 18], iconAnchor: [9, 9], className: ''
     });
 
-    const pharmacies = [
-      { lat: 38.7517, lng: -9.1972, name: "Pharmacy Uruguai", info: "Open 24 hours · ★ 4.3", hours: "24h" },
-      { lat: 38.7183, lng: -9.1520, name: "Farmácia São Mamede", info: "Open 24 hours · ★ 3.6", hours: "24h" },
-      { lat: 38.7151, lng: -9.1418, name: "Farmácia Estácio", info: "9 AM–9 PM · ★ 4.2", hours: "" },
-      { lat: 38.7422, lng: -9.1384, name: "Farmácia Algarve", info: "9 AM–12 AM · ★ 3.9", hours: "" },
-      { lat: 38.7120, lng: -9.1383, name: "Barral (Rua Augusta)", info: "8 AM–9 PM · ★ 3.4", hours: "" },
-    ];
+    // ── Helpers ──
+    function showError(msg) {
+      document.getElementById('location-banner').style.display = 'none';
+      document.getElementById('pharmacy-loading').style.display = 'none';
+      document.getElementById('pharmacy-error').style.display = 'block';
+      document.getElementById('pharmacy-error-msg').textContent = msg;
+    }
 
-    pharmacies.forEach(p => {
-      L.marker([p.lat, p.lng], { icon })
-        .addTo(map)
-        .bindPopup(`<strong>${p.name}</strong><br/><small>${p.info}</small>`);
-    });
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // ── Render pharmacy list ──
+    function renderList(pharmacies, userLat, userLng) {
+      const list = document.getElementById('pharmacy-list');
+      list.innerHTML = '';
+
+      if (!pharmacies.length) {
+        list.innerHTML = '<p style="color:var(--text-light);font-size:0.88rem;padding:12px 0;">No pharmacies found within 2 km. Try the link below to search manually.</p>';
+        return;
+      }
+
+      pharmacies.forEach(p => {
+        const dist = haversineKm(userLat, userLng, p.lat, p.lng);
+        const distLabel = dist < 1 ? `${Math.round(dist * 1000)} m away` : `${dist.toFixed(1)} km away`;
+        const name = p.tags['name'] || p.tags['name:en'] || 'Pharmacy';
+        const addr = [p.tags['addr:street'], p.tags['addr:housenumber']].filter(Boolean).join(' ') ||
+                     p.tags['addr:full'] || '';
+        const phone = p.tags['phone'] || p.tags['contact:phone'] || '';
+        const opening = p.tags['opening_hours'] || '';
+        const is24 = opening.toLowerCase().includes('24/7') || opening === '00:00-24:00' || opening.includes('24 hours');
+        const mapsUrl = `https://maps.google.com/?q=${p.lat},${p.lng}`;
+
+        const item = document.createElement('a');
+        item.className = 'pharmacy-item';
+        item.href = mapsUrl;
+        item.target = '_blank';
+        item.innerHTML = `
+          <div>
+            <div class="ph-name">${name}</div>
+            ${addr ? `<div class="ph-addr">${addr}</div>` : ''}
+            ${opening ? `<div class="ph-hours ${is24 ? 'open24' : 'hours'}">${is24 ? '🟢 Open 24 hours' : '🕐 ' + opening}${phone ? ' · ' + phone : ''}</div>` : (phone ? `<div class="ph-hours hours">📞 ${phone}</div>` : '')}
+          </div>
+          <div class="ph-rating" style="flex-direction:column;align-items:flex-end;gap:2px;">
+            <span style="font-size:0.75rem;color:var(--text-light);">${distLabel}</span>
+            ${is24 ? '<span style="font-size:0.7rem;background:var(--sage-faint);color:var(--sage);padding:2px 8px;border-radius:20px;font-weight:600;">24h</span>' : ''}
+          </div>`;
+        list.appendChild(item);
+      });
+    }
+
+    // ── Fetch from Overpass API ──
+    async function fetchPharmacies(lat, lng) {
+      document.getElementById('location-banner').style.display = 'none';
+      document.getElementById('pharmacy-loading').style.display = 'block';
+
+      const radius = 2000; // metres
+      const query = `
+        [out:json][timeout:20];
+        (
+          node["amenity"="pharmacy"](around:${radius},${lat},${lng});
+          way["amenity"="pharmacy"](around:${radius},${lat},${lng});
+        );
+        out body center;`;
+
+      try {
+        const res = await fetch('https://overpass-api.de/api/interpreter', {
+          method: 'POST',
+          body: 'data=' + encodeURIComponent(query)
+        });
+        if (!res.ok) throw new Error(`Overpass API error: ${res.status}`);
+        const data = await res.json();
+
+        const pharmacies = data.elements.map(el => ({
+          lat: el.lat ?? el.center?.lat,
+          lng: el.lon ?? el.center?.lon,
+          tags: el.tags || {}
+        })).filter(p => p.lat && p.lng);
+
+        // Sort by distance
+        pharmacies.sort((a, b) =>
+          haversineKm(lat, lng, a.lat, a.lng) - haversineKm(lat, lng, b.lat, b.lng)
+        );
+
+        // Take closest 8
+        const nearby = pharmacies.slice(0, 8);
+
+        document.getElementById('pharmacy-loading').style.display = 'none';
+        document.getElementById('pharmacy-footer').style.display = 'block';
+
+        // Update heading
+        document.getElementById('pharmacies-subtitle').textContent =
+          `${nearby.length} pharmacie${nearby.length !== 1 ? 's' : ''} found within 2 km`;
+
+        // Plot on map
+        nearby.forEach(p => {
+          const name = p.tags['name'] || 'Pharmacy';
+          const opening = p.tags['opening_hours'] || '';
+          L.marker([p.lat, p.lng], { icon: pharmacyIcon })
+            .addTo(map)
+            .bindPopup(`<strong>${name}</strong>${opening ? '<br><small>' + opening + '</small>' : ''}`);
+        });
+
+        renderList(nearby, lat, lng);
+
+      } catch (err) {
+        showError('Could not reach the pharmacy database. Please check your connection and try refreshing.');
+        console.error(err);
+      }
+    }
+
+    // ── Geolocation ──
+    if (!navigator.geolocation) {
+      document.getElementById('location-banner').innerHTML =
+        '<span style="font-size:1.2rem">⚠️</span> <span>Your browser does not support geolocation. Showing pharmacies in Lisbon as a default.</span>';
+      fetchPharmacies(DEFAULT[0], DEFAULT[1]);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        map.setView([lat, lng], 15);
+
+        // "You are here" marker
+        L.marker([lat, lng], { icon: youIcon })
+          .addTo(map)
+          .bindPopup('<strong>📍 You are here</strong>')
+          .openPopup();
+
+        // Update heading
+        document.getElementById('pharmacies-title').textContent = 'Pharmacies Near You';
+
+        fetchPharmacies(lat, lng);
+      },
+      function (err) {
+        let msg = 'Location access was denied or unavailable.';
+        if (err.code === 1) msg = 'Location access was denied. Showing pharmacies in Lisbon as a default.';
+        if (err.code === 2) msg = 'Your location could not be determined. Showing pharmacies in Lisbon as a default.';
+        if (err.code === 3) msg = 'Location request timed out. Showing pharmacies in Lisbon as a default.';
+
+        document.getElementById('location-banner').style.background = 'var(--amber-light)';
+        document.getElementById('location-banner').style.borderColor = '#e5c59a';
+        document.getElementById('location-banner').style.color = 'var(--amber)';
+        document.getElementById('location-banner').innerHTML =
+          `<span style="font-size:1.3rem">⚠️</span><div><strong>Location unavailable</strong><br><span style="font-weight:400;color:var(--text-mid);">${msg}</span></div>`;
+
+        // Fall back to Lisbon
+        fetchPharmacies(DEFAULT[0], DEFAULT[1]);
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
   };
 </script>
 
